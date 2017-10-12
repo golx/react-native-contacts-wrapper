@@ -107,7 +107,7 @@ RCT_EXPORT_METHOD(getEmail:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseR
 
 
 - (NSMutableDictionary *) emptyContactDict {
-  return [[NSMutableDictionary alloc] initWithObjects:@[@"", @"", @""] forKeys:@[@"name", @"phone", @"email"]];
+  return [[NSMutableDictionary alloc] initWithObjects:@[@"", @"", @"", @"", @"", @""] forKeys:@[@"name", @"phone", @"email", @"first_name", @"middle_name", @"last_name"]];
 }
 
 /**
@@ -131,25 +131,29 @@ RCT_EXPORT_METHOD(getEmail:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseR
        This could also be extended to return arrays of phone numbers, email addresses etc. instead of jsut first found
        */
       NSMutableDictionary *contactData = [self emptyContactDict];
-      
+
       NSString *fullName = [self getFullNameForFirst:contact.givenName middle:contact.middleName last:contact.familyName ];
       NSArray *phoneNos = contact.phoneNumbers;
       NSArray *emailAddresses = contact.emailAddresses;
-      
+
       //Return full name
       [contactData setValue:fullName forKey:@"name"];
-      
+
+      [contactData setValue:contact.givenName forKey:@"first_name"];
+      [contactData setValue:contact.middleName forKey:@"middle_name"];
+      [contactData setValue:contact.familyName forKey:@"last_name"];
+
       //Return first phone number
       if([phoneNos count] > 0) {
         CNPhoneNumber *phone = ((CNLabeledValue *)phoneNos[0]).value;
         [contactData setValue:phone.stringValue forKey:@"phone"];
       }
-      
+
       //Return first email address
       if([emailAddresses count] > 0) {
         [contactData setValue:((CNLabeledValue *)emailAddresses[0]).value forKey:@"email"];
       }
-      
+
       [self contactPicked:contactData];
     }
       break;
@@ -160,7 +164,7 @@ RCT_EXPORT_METHOD(getEmail:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseR
         [self pickerNoEmail];
         return;
       }
-      
+
       CNLabeledValue *email = contact.emailAddresses[0].value;
       [self emailPicked:email];
     }
@@ -170,8 +174,8 @@ RCT_EXPORT_METHOD(getEmail:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseR
       [self pickerError];
     break;
   }
-  
-  
+
+
 }
 
 
@@ -188,7 +192,7 @@ RCT_EXPORT_METHOD(getEmail:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseR
   switch(_requestCode) {
     case(REQUEST_CONTACT):
     {
-      
+
       /* Return NSDictionary ans JS Object to RN, containing basic contact data
        This is a starting point, in future more fields should be added, as required.
        This could also be extended to return arrays of phone numbers, email addresses etc. instead of jsut first found
@@ -198,11 +202,15 @@ RCT_EXPORT_METHOD(getEmail:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseR
       fNameObject = (__bridge NSString *) ABRecordCopyValue(person, kABPersonFirstNameProperty);
       mNameObject = (__bridge NSString *) ABRecordCopyValue(person, kABPersonMiddleNameProperty);
       lNameObject = (__bridge NSString *) ABRecordCopyValue(person, kABPersonLastNameProperty);
-      
+
       NSString *fullName = [self getFullNameForFirst:fNameObject middle:mNameObject last:lNameObject];
-      
+
       //Return full name
       [contactData setValue:fullName forKey:@"name"];
+
+      [contactData setValue:fNameObject forKey:@"first_name"];
+      [contactData setValue:mNameObject forKey:@"middle_name"];
+      [contactData setValue:lNameObject forKey:@"last_name"];
       
       //Return first phone number
       ABMultiValueRef phoneMultiValue = ABRecordCopyValue(person, kABPersonPhoneProperty);

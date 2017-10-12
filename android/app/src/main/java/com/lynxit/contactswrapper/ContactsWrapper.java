@@ -144,7 +144,10 @@ public class ContactsWrapper extends ReactContextBaseJavaModule implements Activ
                             // Create the projection (SQL fields) and sort order.
                             String[] projection = {
                                 ContactsContract.Contacts.Entity.MIMETYPE,
-                                ContactsContract.Contacts.Entity.DATA1
+                                ContactsContract.Contacts.Entity.DATA1,
+                                ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME,
+                                ContactsContract.CommonDataKinds.StructuredName.MIDDLE_NAME,
+                                ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME
                             };
                             String sortOrder = ContactsContract.Contacts.Entity.RAW_CONTACT_ID + " ASC";
                             cursor = this.contentResolver.query(contactUri, projection, null, null, sortOrder);
@@ -165,6 +168,16 @@ public class ContactsWrapper extends ReactContextBaseJavaModule implements Activ
                                     mime = cursor.getString(mimeIdx);
                                     if(returnKeys.containsKey(mime)) {
                                         contactData.putString((String) returnKeys.get(mime), cursor.getString(dataIdx));
+                                        if (mime.equals(ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE))
+                                        {
+                                            int firstNameIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME);
+                                            int middleNameIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.StructuredName.MIDDLE_NAME);
+                                            int lastNameIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME);
+
+                                            contactData.putString("first_name", cursor.getString(firstNameIdx));
+                                            contactData.putString("middle_name", cursor.getString(middleNameIdx));
+                                            contactData.putString("last_name", cursor.getString(lastNameIndex));
+                                        }
                                         foundData = true;
                                     }
                                 } while (cursor.moveToNext());
